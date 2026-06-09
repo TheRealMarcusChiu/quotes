@@ -61,10 +61,16 @@
   const dateInput = form.elements.dateAdded;
   dateInput.value = todayISO();
 
+  let noticeTimer;
   function showNotice(message, isError) {
     notice.textContent = message;
     notice.className = isError ? 'notice notice-error' : 'notice';
     notice.hidden = false;
+
+    clearTimeout(noticeTimer);
+    noticeTimer = setTimeout(() => {
+      notice.hidden = true;
+    }, 3000);
   }
 
   form.addEventListener('submit', async (e) => {
