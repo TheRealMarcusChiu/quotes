@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quotes admin</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Admin</p>
+  <h1>Quotes admin</h1>
+  <nav class="nav header-links">
+    <a href="index.html">View local</a>
+    <a href="http://git.marcuschiu.com/quotes/" target="_blank" rel="noopener">View production</a>
+  </nav>
+  <nav class="tabs" role="tablist">
+    <button class="tab is-active" data-tab="add" role="tab">Add</button>
+    <button class="tab" data-tab="manage" role="tab">Manage</button>
+  </nav>
+</header>
+
+<main class="admin">
+
+  <!-- Add tab -->
+  <section id="panel-add" class="panel" data-panel="add">
+    <form id="add-form" class="admin-form" autocomplete="off">
+      <label>
+        <span>Quote <em>required</em></span>
+        <textarea name="text" rows="3" required placeholder="Words worth keeping…"></textarea>
+      </label>
+
+      <label>
+        <span>Author <em>optional</em></span>
+        <input type="text" name="author" placeholder="e.g. Marcus Aurelius">
+      </label>
+
+      <label>
+        <span>Date added <em>optional</em></span>
+        <input type="date" name="dateAdded">
+      </label>
+
+      <label>
+        <span>Source <em>optional</em></span>
+        <input type="text" name="source" placeholder="e.g. Meditations">
+      </label>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Add quote</button>
+        <button type="reset" class="btn btn-ghost">Clear</button>
+      </div>
+
+      <p id="notice" class="notice" hidden></p>
+    </form>
+  </section>
+
+  <!-- Manage tab -->
+  <section id="panel-manage" class="panel" data-panel="manage" hidden>
+    <input id="search" type="search" placeholder="Search quotes…" autocomplete="off" aria-label="Search quotes">
+    <p id="count" class="count"></p>
+    <div id="rows" class="manage-list"></div>
+    <p id="empty" class="empty-msg" hidden>No quotes match your search.</p>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/flexsearch@0.7.43/dist/flexsearch.bundle.min.js"></script>
+<script src="search-index.js"></script>
+<script src="admin.js"></script>
+
+</body>
+</html>

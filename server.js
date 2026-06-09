@@ -6,6 +6,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { execFile } = require('child_process');
 
 const ROOT = __dirname;
 const DATA_FILE = path.join(ROOT, 'quotes.js');
@@ -40,6 +41,44 @@ function loadQuotes() {
 
 function saveQuotes(list) {
   fs.writeFileSync(DATA_FILE, `const QUOTES = ${JSON.stringify(list, null, 2)};\n`);
+}
+
+// Stage, commit, and push quotes.js after a change. Git operations are
+// serialized through a promise chain so rapid edits can't collide on the index
+// lock, and run in the background so the API response isn't blocked.
+let gitChain = Promise.resolve();
+
+function git(args) {
+  return new Promise((resolve, reject) => {
+    execFile('git', args, { cwd: ROOT }, (err, stdout, stderr) => {
+      if (err) reject(Object.assign(err, { stderr }));
+      else resolve(stdout);
+    });
+  });
+}
+
+function commitAndPush(message) {
+  gitChain = gitChain.then(async () => {
+    try {
+      await git(['add', DATA_FILE]);
+      try {
+        await git(['commit', '-m', message]);
+      } catch (e) {
+        if (/nothing to commit/i.test(e.stderr || '')) return; // no real change
+        throw e;
+      }
+      await git(['push']);
+      console.log('Pushed:', message);
+    } catch (e) {
+      console.error('git sync failed:', (e.stderr || e.message || '').trim());
+    }
+  });
+  return gitChain;
+}
+
+function snippet(text) {
+  const s = String(text).replace(/\s+/g, ' ').trim();
+  return s.length > 50 ? `${s.slice(0, 50)}…` : s;
 }
 
 let quotes = loadQuotes();
@@ -91,6 +130,7 @@ async function handleApi(req, res, pathname) {
       const record = clean(body, uid());
       quotes.unshift(record); // newest first
       saveQuotes(quotes);
+      commitAndPush(`Add quote: "${snippet(record.text)}"`);
       return sendJSON(res, 201, record);
     }
 
@@ -101,6 +141,7 @@ async function handleApi(req, res, pathname) {
       if (!String(merged.text || '').trim()) return sendJSON(res, 400, { error: 'text required' });
       quotes[i] = clean(merged, id);
       saveQuotes(quotes);
+      commitAndPush(`Edit quote: "${snippet(quotes[i].text)}"`);
       return sendJSON(res, 200, quotes[i]);
     }
 
@@ -109,6 +150,7 @@ async function handleApi(req, res, pathname) {
       quotes = quotes.filter((q) => q.id !== id);
       if (quotes.length === before) return sendJSON(res, 404, { error: 'not found' });
       saveQuotes(quotes);
+      commitAndPush(`Delete quote ${id}`);
       return sendJSON(res, 200, { ok: true });
     }
 
@@ -129,7 +171,7 @@ const TYPES = {
 };
 
 function serveStatic(res, pathname) {
-  const rel = pathname === '/' ? '/index.html' : pathname;
+  const rel = pathname === '/' ? '/admin.html' : pathname;
   const filePath = path.normalize(path.join(ROOT, rel));
   if (!filePath.startsWith(ROOT)) {
     res.writeHead(403);

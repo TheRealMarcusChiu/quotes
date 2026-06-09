@@ -145,12 +145,45 @@ footer {
 .admin-nav {
   margin-top: 56px;
 }
+.header-links {
+  margin-top: 20px;
+  margin-bottom: 0;
+}
 
 /* ---------- Admin shell ---------- */
 .admin {
   max-width: 620px;
   margin: 0 auto;
   padding: 0 24px 100px;
+}
+
+/* ---------- Tabs ---------- */
+.tabs {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 32px;
+}
+.tab {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 10px 22px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.tab:hover { color: var(--text); }
+.tab.is-active {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.panel {
+  animation: fadeUp 0.3s ease both;
 }
 
 /* ---------- Forms ---------- */
