@@ -1,11 +1,5 @@
 const QUOTES = [
   {
-    "id": "mq6aboko3bnzn6",
-    "text": "i lie, so believe me",
-    "author": "Marcus Chiu",
-    "dateAdded": "2026-06-09"
-  },
-  {
     "id": "mq6a3m0m8h56yi",
     "text": "writing well requires you to think well",
     "author": "Unknown",
