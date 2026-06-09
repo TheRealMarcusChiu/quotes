@@ -1,0 +1,9 @@
+{
+  "name": "quotes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Quotes site with a file-backed admin API",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
