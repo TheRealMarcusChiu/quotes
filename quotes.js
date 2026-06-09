@@ -1,11 +1,5 @@
 const QUOTES = [
   {
-    "id": "mq6b2a6nsi9yjl",
-    "text": "The only way to do great work is to love what you do",
-    "author": "Steve Jobs",
-    "dateAdded": "2026-06-09"
-  },
-  {
     "id": "mq6azjav52qrat",
     "text": "i lie, so believe me",
     "author": "Marcus Chiu",
