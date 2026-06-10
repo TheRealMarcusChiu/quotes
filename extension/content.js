@@ -79,10 +79,25 @@
   const btn = document.createElement('button');
   btn.className = 'qx-btn';
   btn.textContent = '+ Quote';
-  btn.hidden = true;
   shadow.appendChild(btn);
 
   document.documentElement.appendChild(host);
+
+  // Hide the button by parking it at the top-left and making it invisible.
+  // We can't rely on the `hidden` attribute because `.qx-btn { display: ... }`
+  // overrides its default `display: none`. visibility:hidden also disables
+  // pointer events, so a parked button can't be clicked. Starts hidden.
+  function hideButton() {
+    btn.style.visibility = 'hidden';
+    btn.style.top = '0';
+    btn.style.left = '0';
+  }
+  function showButtonAt(top, left) {
+    btn.style.top = `${top}px`;
+    btn.style.left = `${left}px`;
+    btn.style.visibility = 'visible';
+  }
+  hideButton();
 
   let savedText = '';
 
@@ -105,7 +120,7 @@
 
   function openForm(text) {
     closeOverlay();
-    btn.hidden = true;
+    hideButton();
 
     overlay = document.createElement('div');
     overlay.className = 'qx-overlay';
@@ -202,14 +217,12 @@
 
   function showButtonForSelection() {
     const text = selectionText();
-    if (!text) { btn.hidden = true; return; }
+    if (!text) { hideButton(); return; }
     const rect = window.getSelection().getRangeAt(0).getBoundingClientRect();
-    if (!rect || (rect.width === 0 && rect.height === 0)) { btn.hidden = true; return; }
+    if (!rect || (rect.width === 0 && rect.height === 0)) { hideButton(); return; }
     savedText = text;
     // Position just below the end of the selection, in page (document) coords.
-    btn.style.top = `${rect.bottom + window.scrollY + 6}px`;
-    btn.style.left = `${rect.left + window.scrollX}px`;
-    btn.hidden = false;
+    showButtonAt(rect.bottom + window.scrollY + 6, rect.left + window.scrollX);
   }
 
   document.addEventListener('mouseup', () => {
@@ -220,7 +233,7 @@
   // Hide when the selection is cleared (covers keyboard deselect, programmatic
   // clears, and clicking away in browsers that fire selectionchange promptly).
   document.addEventListener('selectionchange', () => {
-    if (!selectionText()) btn.hidden = true;
+    if (!selectionText()) hideButton();
   });
 
   // Belt-and-suspenders: hide immediately on any pointer-down outside our own
@@ -229,7 +242,7 @@
   // the gesture produced a new selection. composedPath() sees into the shadow
   // DOM, so clicks on the button itself (which open the form) are excluded.
   document.addEventListener('mousedown', (e) => {
-    if (!e.composedPath().includes(host)) btn.hidden = true;
+    if (!e.composedPath().includes(host)) hideButton();
   }, true);
 
   btn.addEventListener('mousedown', (e) => {
