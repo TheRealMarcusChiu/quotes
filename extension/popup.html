@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="popup.css">
+</head>
+<body class="popup">
+
+<header>
+  <p class="eyebrow">Admin</p>
+  <h1>Quotes admin</h1>
+  <nav class="tabs" role="tablist">
+    <button class="tab is-active" data-tab="add" role="tab">Add</button>
+    <button class="tab" data-tab="manage" role="tab">Manage</button>
+    <button class="tab" data-tab="settings" role="tab">Settings</button>
+  </nav>
+</header>
+
+<main class="admin">
+
+  <!-- Add tab -->
+  <section id="panel-add" class="panel" data-panel="add">
+    <form id="add-form" class="admin-form" autocomplete="off">
+      <label>
+        <span>Quote <em>required</em></span>
+        <textarea name="text" rows="3" required placeholder="Words worth keeping…"></textarea>
+      </label>
+
+      <label>
+        <span>Author <em>optional</em></span>
+        <input type="text" name="author" placeholder="e.g. Marcus Aurelius">
+      </label>
+
+      <label>
+        <span>Date added <em>optional</em></span>
+        <input type="date" name="dateAdded">
+      </label>
+
+      <label>
+        <span>Source <em>optional</em></span>
+        <input type="text" name="source" placeholder="e.g. Meditations">
+      </label>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Add quote</button>
+        <button type="reset" class="btn btn-ghost">Clear</button>
+      </div>
+
+      <p id="notice" class="notice" hidden></p>
+    </form>
+  </section>
+
+  <!-- Manage tab -->
+  <section id="panel-manage" class="panel" data-panel="manage" hidden>
+    <input id="search" type="search" placeholder="Search quotes…" autocomplete="off" aria-label="Search quotes">
+    <p id="count" class="count"></p>
+    <div id="rows" class="manage-list"></div>
+    <p id="empty" class="empty-msg" hidden>No quotes match your search.</p>
+  </section>
+
+  <!-- Settings tab -->
+  <section id="panel-settings" class="panel" data-panel="settings" hidden>
+    <form id="settings-form" class="admin-form" autocomplete="off">
+      <label>
+        <span>Server URL <em>required</em></span>
+        <input type="url" name="serverUrl" placeholder="http://localhost:3030" required>
+      </label>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" id="reset-url" class="btn btn-ghost">Reset to default</button>
+      </div>
+      <p id="settings-notice" class="notice" hidden></p>
+    </form>
+  </section>
+
+</main>
+
+<script src="flexsearch.bundle.min.js"></script>
+<script src="search-index.js"></script>
+<script src="popup.js"></script>
+
+</body>
+</html>

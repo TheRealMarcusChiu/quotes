@@ -1,0 +1,29 @@
+/* Popup-specific overrides on top of the shared styles.css. */
+
+.popup {
+  width: 420px;
+  max-height: 580px;
+  overflow-y: auto;
+}
+
+.popup header {
+  padding: 28px 24px 20px;
+}
+.popup header h1 {
+  font-size: 28px;
+}
+.popup .tabs {
+  margin-top: 22px;
+}
+
+.popup .admin {
+  padding: 0 24px 32px;
+}
+
+/* Tighter manage rows so more fit in the popup viewport. */
+.popup .manage-row {
+  padding: 16px 0;
+}
+.popup .manage-text {
+  font-size: 14px;
+}
