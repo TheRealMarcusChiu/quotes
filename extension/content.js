@@ -186,6 +186,14 @@
     if (e.key === 'Escape') closeOverlay();
   });
 
+  // The right-click "Add as quote" menu (handled in background.js) asks us to
+  // open the in-page form prefilled with the selected text.
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg && msg.type === 'open-quote-form') {
+      openForm((msg.text || '').trim());
+    }
+  });
+
   // Current non-empty selection text, or '' if none.
   function selectionText() {
     const sel = window.getSelection();
@@ -209,10 +217,20 @@
     setTimeout(showButtonForSelection, 0);
   });
 
-  // Hide when the selection is cleared (e.g. a plain click elsewhere).
+  // Hide when the selection is cleared (covers keyboard deselect, programmatic
+  // clears, and clicking away in browsers that fire selectionchange promptly).
   document.addEventListener('selectionchange', () => {
     if (!selectionText()) btn.hidden = true;
   });
+
+  // Belt-and-suspenders: hide immediately on any pointer-down outside our own
+  // button. A click that collapses the selection should make the button vanish
+  // right away, without waiting on selectionchange. mouseup then re-shows it if
+  // the gesture produced a new selection. composedPath() sees into the shadow
+  // DOM, so clicks on the button itself (which open the form) are excluded.
+  document.addEventListener('mousedown', (e) => {
+    if (!e.composedPath().includes(host)) btn.hidden = true;
+  }, true);
 
   btn.addEventListener('mousedown', (e) => {
     // Prevent this click from clearing the page selection.

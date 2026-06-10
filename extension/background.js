@@ -29,6 +29,34 @@ async function addQuote(quote) {
   return r.json();
 }
 
+// Right-click menu: "Add as quote", shown only when text is selected.
+const MENU_ID = 'quotes-add-selection';
+
+function createMenu() {
+  chrome.contextMenus.create(
+    {
+      id: MENU_ID,
+      title: 'Add as quote',
+      contexts: ['selection'],
+    },
+    () => void chrome.runtime.lastError // ignore "duplicate id" on re-register
+  );
+}
+
+chrome.runtime.onInstalled.addListener(createMenu);
+chrome.runtime.onStartup.addListener(createMenu);
+
+// Tell the content script to open its in-page form, prefilled with the
+// selected text, so author/source can be filled in before saving.
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId !== MENU_ID || !tab || !tab.id) return;
+  const text = (info.selectionText || '').trim();
+  if (!text) return;
+  chrome.tabs.sendMessage(tab.id, { type: 'open-quote-form', text }, () => {
+    void chrome.runtime.lastError; // content script not present on this page
+  });
+});
+
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg && msg.type === 'add-quote') {
     addQuote(msg.quote)

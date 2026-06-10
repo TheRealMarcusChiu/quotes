@@ -81,6 +81,29 @@
     };
   }
 
+  // Read the highlighted text (and title) from the active tab. Returns
+  // { text, title } with text='' when nothing is selected, or null on failure
+  // (e.g. a restricted page like chrome:// where scripts can't be injected).
+  async function getActiveTabSelection() {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab || !tab.id) return null;
+      const [res] = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => {
+          const sel = window.getSelection();
+          return {
+            text: sel && !sel.isCollapsed ? sel.toString().trim() : '',
+            title: document.title || '',
+          };
+        },
+      });
+      return res && res.result ? res.result : null;
+    } catch (e) {
+      return null; // injection blocked (restricted page) — fall back to empty form
+    }
+  }
+
   // ---------- Add form ----------
   const form = document.getElementById('add-form');
   const notice = document.getElementById('notice');
@@ -286,5 +309,14 @@
     QuoteAPI.setServer(url);
     urlInput.value = url;
     refresh();
+
+    // If the active tab has highlighted text, prefill the Add form with it so
+    // the user can save the selection as a quote straight from the popup.
+    const sel = await getActiveTabSelection();
+    if (sel && sel.text) {
+      form.elements.text.value = sel.text;
+      if (sel.title) form.elements.source.value = sel.title;
+      form.elements.author.focus();
+    }
   })();
 })();
