@@ -1,5 +1,11 @@
 const QUOTES = [
   {
+    "id": "mqbcb3de7h67rt",
+    "text": "Words worth keeping now under http://git.marcuschiu.com/images",
+    "author": "Marcus Chiu",
+    "dateAdded": "2026-06-12"
+  },
+  {
     "id": "mqao3x6vfr5h8b",
     "text": "there are two kinds of knowing, one is knowing how to read a book, the other is knowing someone as a person. You can't know someone just by reading a book right?",
     "dateAdded": "2026-06-12"
