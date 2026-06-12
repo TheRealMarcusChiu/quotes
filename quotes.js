@@ -1,5 +1,10 @@
 const QUOTES = [
   {
+    "id": "mqakyvjoog12pu",
+    "text": "vows are not a list of reasons why you love someone, they are list of promises you make for someone",
+    "dateAdded": "2026-06-12"
+  },
+  {
     "id": "mqa723jljw37zc",
     "text": "Though the fig tree does not bud and there are no grapes on the vines, though the olive crop fails and the fields produce no food, though there are no sheep in the pen and no cattle in the stalls, yet I will rejoice in the LORD, I will be joyful in God my Savior.",
     "author": "Habakkuk 3:17-18",
