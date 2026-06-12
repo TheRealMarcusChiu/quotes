@@ -1,5 +1,11 @@
 const QUOTES = [
   {
+    "id": "mqa723jljw37zc",
+    "text": "Though the fig tree does not bud and there are no grapes on the vines, though the olive crop fails and the fields produce no food, though there are no sheep in the pen and no cattle in the stalls, yet I will rejoice in the LORD, I will be joyful in God my Savior.",
+    "author": "Habakkuk 3:17-18",
+    "dateAdded": "2026-06-11"
+  },
+  {
     "id": "mq6azjav52qrat",
     "text": "i lie, so believe me",
     "author": "Marcus Chiu",
