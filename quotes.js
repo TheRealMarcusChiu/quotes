@@ -1,5 +1,10 @@
 const QUOTES = [
   {
+    "id": "mqalbsz2u766ji",
+    "text": "a wise man can play a fool, but a fool can never play a wise",
+    "dateAdded": "2026-06-12"
+  },
+  {
     "id": "mqakyvjoog12pu",
     "text": "vows are not a list of reasons why you love someone, they are list of promises you make for someone",
     "dateAdded": "2026-06-12"
