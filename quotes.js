@@ -1,5 +1,10 @@
 const QUOTES = [
   {
+    "id": "mqao3x6vfr5h8b",
+    "text": "there are two kinds of knowing, one is knowing how to read a book, the other is knowing someone as a person. You can't know someone just by reading a book right?",
+    "dateAdded": "2026-06-12"
+  },
+  {
     "id": "mqalbsz2u766ji",
     "text": "a wise man can play a fool, but a fool can never play a wise",
     "dateAdded": "2026-06-12"
