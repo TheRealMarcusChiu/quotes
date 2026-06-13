@@ -11,6 +11,9 @@ const { execFile } = require('child_process');
 const ROOT = __dirname;
 const DATA_FILE = path.join(ROOT, 'quotes.js');
 const PORT = process.env.PORT || 3030;
+// Bind address. Defaults to 0.0.0.0 so the server accepts remote connections;
+// set HOST=127.0.0.1 to restrict it to localhost only.
+const HOST = process.env.HOST || '0.0.0.0';
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -195,6 +198,6 @@ http
     if (decoded.startsWith('/api/quotes')) return handleApi(req, res, decoded);
     return serveStatic(res, decoded);
   })
-  .listen(PORT, () => {
-    console.log(`Quotes server running at http://localhost:${PORT}`);
+  .listen(PORT, HOST, () => {
+    console.log(`Quotes server running on ${HOST}:${PORT} (http://localhost:${PORT})`);
   });
