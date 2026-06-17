@@ -41,6 +41,11 @@
     .orb-date { margin-top: 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.34em; color: #5f5a50; }
     .orb-exit { position: absolute; top: 18px; right: 20px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 1px solid rgba(184,155,94,0.3); border-radius: 50%; color: #b89b5e; font-size: 19px; line-height: 1; cursor: pointer; font-family: 'JetBrains Mono', monospace; transition: background 0.3s ease, border-color 0.3s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1); }
     .orb-exit:hover { background: rgba(184,155,94,0.14); border-color: rgba(184,155,94,0.6); transform: rotate(90deg); }
+
+    /* collector's mode — orbs as constellation stars */
+    @keyframes orbTwinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .orb.is-star .orb-core { box-shadow: 0 0 32px 9px rgba(232,202,134,0.95); }
+    .orb.is-dim .orb-core { box-shadow: 0 0 9px 2px rgba(214,178,108,0.5); animation: orbTwinkle 2.6s ease-in-out infinite; }
   </style>
 </helmet>
 
@@ -151,6 +156,8 @@ class Component extends DCLogic {
     this.initThree();
     this.initOrbs();
     this.bindScroll();
+    this.bindKonami();
+    this.bindMarcus();
     // run focus pass after fonts/layout settle
     this._k1 = setTimeout(() => this.applyFocus(), 60);
     this._k2 = setTimeout(() => this.applyFocus(), 600);
@@ -178,6 +185,12 @@ class Component extends DCLogic {
     }
     document.body.style.cursor = "";
     if (this._escHandler) window.removeEventListener("keydown", this._escHandler);
+    if (this._onKonami) window.removeEventListener("keydown", this._onKonami);
+    if (this._onMarcus) window.removeEventListener("keydown", this._onMarcus);
+    clearTimeout(this._colT1);
+    clearTimeout(this._colT2);
+    clearTimeout(this._colT3);
+    if (this._svg && this._svg.parentNode) this._svg.parentNode.removeChild(this._svg);
     if (this._backdrop && this._backdrop.parentNode) this._backdrop.parentNode.removeChild(this._backdrop);
     if (this._orbs) this._orbs.forEach((o) => { if (o.el.parentNode) o.el.parentNode.removeChild(o.el); });
   }
@@ -228,7 +241,11 @@ class Component extends DCLogic {
       const t = now * 0.001;
       const W2 = window.innerWidth, H2 = window.innerHeight;
       for (const o of orbs) {
-        if (!o.frozen) {
+        if (this._collector && o.tx != null) {
+          // ease toward assigned constellation point
+          o.sx += (o.tx - o.sx) * o.ease;
+          o.sy += (o.ty - o.sy) * o.ease;
+        } else if (!o.frozen) {
           o.sy -= o.vy * dt;
           o.sx += Math.sin(t * o.spd + o.ph) * o.sway * dt;
           if (o.sy < -50) {
@@ -241,13 +258,177 @@ class Component extends DCLogic {
           if (o.sx < -50) o.sx = W2 + 50;
           if (o.sx > W2 + 50) o.sx = -50;
         }
-        const target = o.hover ? 1.55 : 1;
-        o.cur += (target - o.cur) * 0.15;
+        let target = o.hover ? 1.55 : 1;
+        if (this._collector) target = o.star ? 1.45 : 0.75;
+        o.cur += (target - o.cur) * (this._collector ? 0.1 : 0.15);
         o.el.style.transform = "translate(" + o.sx.toFixed(1) + "px," + o.sy.toFixed(1) + "px) scale(" + o.cur.toFixed(3) + ")";
       }
       this._orbRaf = requestAnimationFrame(loop);
     };
     this._orbRaf = requestAnimationFrame(loop);
+  }
+
+  // ---- Konami code -> the collector's mode ----
+  bindKonami() {
+    const seq = ["arrowup","arrowup","arrowdown","arrowdown","arrowleft","arrowright","arrowleft","arrowright","b","a"];
+    let idx = 0;
+    this._onKonami = (e) => {
+      const k = (e.key || "").toLowerCase();
+      if (k === seq[idx]) {
+        idx++;
+        if (idx === seq.length) { idx = 0; this.enterCollectorMode(); }
+      } else {
+        idx = (k === seq[0]) ? 1 : 0;
+      }
+    };
+    window.addEventListener("keydown", this._onKonami);
+  }
+
+  // ---- type "marcus" -> golden bloom ----
+  bindMarcus() {
+    const word = "marcus";
+    let buf = "";
+    this._onMarcus = (e) => {
+      const k = e.key || "";
+      if (k.length !== 1) return; // ignore arrows, modifiers, etc.
+      buf = (buf + k.toLowerCase()).slice(-word.length);
+      if (buf === word) this.triggerBloom();
+    };
+    window.addEventListener("keydown", this._onMarcus);
+  }
+
+  triggerBloom() {
+    if (!this._dustLayers) return;
+    this._bloomT0 = performance.now(); // (re)start the bloom envelope
+  }
+
+  // Orion, in normalized coords (x right, y down), centered on origin.
+  buildConstellation(W, H, nOrbs) {
+    const P = [
+      [ 0.00, -0.92], // 0 head      (Meissa)
+      [-0.52, -0.48], // 1 l.shoulder (Betelgeuse)
+      [ 0.50, -0.55], // 2 r.shoulder (Bellatrix)
+      [-0.20,  0.04], // 3 belt left  (Mintaka)
+      [ 0.03,  0.12], // 4 belt mid   (Alnilam)
+      [ 0.25,  0.20], // 5 belt right (Alnitak)
+      [-0.40,  0.74], // 6 l.foot     (Saiph)
+      [ 0.52,  0.82], // 7 r.foot     (Rigel)
+    ];
+    const E = [
+      [0,1],[0,2],[1,2],   // head + shoulders
+      [1,3],[2,5],         // shoulders -> belt
+      [3,4],[4,5],         // the belt
+      [3,6],[5,7],         // belt -> feet
+    ];
+    const s = Math.min(W, H) * 0.34;
+    const cx = W / 2, cy = H * 0.46;
+    const stars = P.map(([nx, ny]) => ({ x: cx + nx * s, y: cy + ny * s }));
+    const used = Math.min(P.length, nOrbs);
+    const targets = [];
+    for (let i = 0; i < used; i++) targets.push({ x: stars[i].x, y: stars[i].y, star: true });
+    // remaining orbs become faint points strung along the figure's lines
+    const dimCount = Math.max(0, nOrbs - used);
+    const validE = E.filter(([a, b]) => a < used && b < used);
+    if (dimCount > 0 && validE.length) {
+      const totalPass = Math.ceil(dimCount / validE.length) + 1;
+      for (let k = 0; k < dimCount; k++) {
+        const [a, b] = validE[k % validE.length];
+        const tt = (Math.floor(k / validE.length) + 1) / totalPass;
+        targets.push({
+          x: stars[a].x + (stars[b].x - stars[a].x) * tt,
+          y: stars[a].y + (stars[b].y - stars[a].y) * tt,
+          star: false,
+        });
+      }
+    }
+    return { targets, stars, edges: E, used };
+  }
+
+  enterCollectorMode() {
+    if (!this._orbs || this._collector) return;
+    if (this._openOrb) this.collapseOrb(true);
+    const W = window.innerWidth, H = window.innerHeight;
+    const { targets, stars, edges, used } = this.buildConstellation(W, H, this._orbs.length);
+
+    // greedy nearest assignment so orbs glide to the closest star (no crossing)
+    const free = this._orbs.slice();
+    targets.forEach((tg) => {
+      let bi = 0, bd = Infinity;
+      for (let i = 0; i < free.length; i++) {
+        const dx = free[i].sx - tg.x, dy = free[i].sy - tg.y;
+        const d = dx * dx + dy * dy;
+        if (d < bd) { bd = d; bi = i; }
+      }
+      const o = free.splice(bi, 1)[0];
+      o.tx = tg.x; o.ty = tg.y; o.star = tg.star; o.frozen = false; o.hover = false;
+      o.ease = 0.045 + Math.random() * 0.02;
+      o.el.classList.remove("is-hover");
+      o.el.classList.add(tg.star ? "is-star" : "is-dim");
+      o.el.style.opacity = tg.star ? "1" : "0.7";
+      o.el.style.pointerEvents = "none";
+    });
+    free.forEach((o) => { o.tx = W / 2; o.ty = -120; o.star = false; o.ease = 0.04; o.el.style.opacity = "0"; o.el.style.pointerEvents = "none"; });
+
+    this._collector = true;
+    // draw the line-figure once the orbs have settled, hold, then disperse
+    this._colT1 = setTimeout(() => this.drawConstellationLines(stars, edges, used, W, H), 1500);
+    this._colT2 = setTimeout(() => this.disperseCollector(W, H), 5200);
+  }
+
+  drawConstellationLines(stars, edges, used, W, H) {
+    if (!this._collector) return;
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("width", W); svg.setAttribute("height", H);
+    svg.style.cssText = "position:fixed;left:0;top:0;z-index:39;pointer-events:none;opacity:0;transition:opacity 1s ease;";
+    const lns = [];
+    edges.forEach(([a, b]) => {
+      if (a >= used || b >= used) return;
+      const s1 = stars[a], s2 = stars[b];
+      const ln = document.createElementNS(ns, "line");
+      ln.setAttribute("x1", s1.x); ln.setAttribute("y1", s1.y);
+      ln.setAttribute("x2", s2.x); ln.setAttribute("y2", s2.y);
+      ln.setAttribute("stroke", "rgba(214,178,108,0.5)");
+      ln.setAttribute("stroke-width", "1");
+      ln.setAttribute("stroke-linecap", "round");
+      const len = Math.hypot(s2.x - s1.x, s2.y - s1.y);
+      ln.style.strokeDasharray = len;
+      ln.style.strokeDashoffset = len;
+      ln.style.transition = "stroke-dashoffset 1.3s cubic-bezier(0.16,1,0.3,1)";
+      svg.appendChild(ln);
+      lns.push(ln);
+    });
+    document.body.appendChild(svg);
+    this._svg = svg;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      svg.style.opacity = "1";
+      lns.forEach((l) => { l.style.strokeDashoffset = "0"; });
+    }));
+  }
+
+  disperseCollector(W, H) {
+    const cx = W / 2, cy = H * 0.46;
+    if (this._svg) this._svg.style.opacity = "0";
+    this._orbs.forEach((o) => {
+      if (o.tx == null) return;
+      // explode each star radially outward, then let the field reclaim them
+      o.tx = cx + (o.tx - cx) * 2.6;
+      o.ty = cy + (o.ty - cy) * 2.6;
+      o.ease = 0.05 + Math.random() * 0.03;
+      o.el.classList.remove("is-star", "is-dim");
+      o.el.style.opacity = o.baseOp || "1";
+    });
+    this._colT3 = setTimeout(() => this.releaseCollector(), 1100);
+  }
+
+  releaseCollector() {
+    this._collector = false;
+    if (this._svg && this._svg.parentNode) this._svg.parentNode.removeChild(this._svg);
+    this._svg = null;
+    if (this._orbs) this._orbs.forEach((o) => {
+      o.tx = null; o.ty = null; o.star = false;
+      o.el.style.pointerEvents = "auto";
+    });
   }
 
   expandOrb(o) {
@@ -407,6 +588,18 @@ class Component extends DCLogic {
     scene.add(far, mid, near);
     const layers = [far, mid, near];
 
+    // golden-bloom refs: remember each layer's resting opacity/size + a soft central core
+    this._dustLayers = layers;
+    this._dustBase = layers.map((l) => ({ op: l.material.opacity, size: l.material.size }));
+    const coreMat = new THREE.SpriteMaterial({
+      map: this._sprite, color: 0xffe9c2, transparent: true, opacity: 0,
+      depthWrite: false, blending: THREE.AdditiveBlending,
+    });
+    const core = new THREE.Sprite(coreMat);
+    core.scale.setScalar(2);
+    scene.add(core);
+    this._dustCore = core;
+
     let mx = 0, my = 0, tmx = 0, tmy = 0;
     this._onMove = (e) => {
       tmx = (e.clientX / window.innerWidth - 0.5);
@@ -443,6 +636,31 @@ class Component extends DCLogic {
       cam.position.x = mx * 4.2;
       cam.position.y = -my * 3.0;
       cam.lookAt(0, 0, 0);
+
+      // golden bloom: converge the dust to center, flare, then breathe back out
+      if (this._bloomT0 != null) {
+        const dur = 3.2;
+        const bt = (performance.now() - this._bloomT0) / 1000;
+        if (bt >= dur) {
+          this._bloomT0 = null;
+          this._dustLayers.forEach((l, i) => {
+            l.scale.setScalar(1);
+            l.material.opacity = this._dustBase[i].op;
+            l.material.size = this._dustBase[i].size;
+          });
+          this._dustCore.material.opacity = 0;
+        } else {
+          const e = Math.pow(Math.sin(Math.PI * (bt / dur)), 0.7); // 0 -> 1 -> 0
+          this._dustLayers.forEach((l, i) => {
+            l.scale.setScalar(1 - 0.8 * e);
+            l.material.opacity = this._dustBase[i].op * (1 + 1.2 * e);
+            l.material.size = this._dustBase[i].size * (1 + 0.7 * e);
+          });
+          this._dustCore.material.opacity = 0.85 * e;
+          this._dustCore.scale.setScalar(2 + 11 * e);
+        }
+      }
+
       renderer.render(scene, cam);
       this._raf = requestAnimationFrame(tick);
     };
