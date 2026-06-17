@@ -1,5 +1,11 @@
 const QUOTES = [
   {
+    "id": "mqhpdm1e92iwqe",
+    "text": "Faith that doesn’t require success, doesn’t need success - IS the ultimate success",
+    "author": "Tim Keller",
+    "dateAdded": "2026-06-17"
+  },
+  {
     "id": "mqbcb3de7h67rt",
     "text": "Words worth keeping now under http://git.marcuschiu.com/images",
     "author": "Marcus Chiu",
