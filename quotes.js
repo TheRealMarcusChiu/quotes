@@ -1,5 +1,10 @@
 const QUOTES = [
   {
+    "id": "mqlb5m1vc3a5n1",
+    "text": "Heaven is not a place for good people, but a place for forgiven people",
+    "dateAdded": "2026-06-19"
+  },
+  {
     "id": "mqhpdm1e92iwqe",
     "text": "Faith that doesn’t require success, doesn’t need success - IS the ultimate success",
     "author": "Tim Keller",
